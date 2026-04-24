@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>振込額いくら？</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      background: #eef0f6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 24px 32px;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 920px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 32px 0 28px;
+    }
+
+    .logo-icon {
+      width: 288px;
+      height: auto;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+
+    .logo-icon img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* ── 2-column layout ── */
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 14px;
+      align-items: start;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(60,80,150,0.09);
+      padding: 28px 26px 24px;
+    }
+
+    /* ── Input row ── */
+    .input-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .input-label {
+      font-size: 15px;
+      color: #4a5578;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .yen-mark { font-size: 17px; color: #4a5578; }
+
+    .amount-input {
+      border: 1.5px solid #d4daf0;
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #2c3e6b;
+      text-align: right;
+      width: 170px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .amount-input:focus {
+      border-color: #4a6cf7;
+      box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+    }
+
+    .unit { font-size: 15px; color: #4a5578; }
+
+    /* ── Tax table ── */
+    .tax-table {
+      border: 1.5px solid #e4e8f4;
+      border-radius: 12px;
+    }
+
+    .tax-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+    }
+
+    .tax-row:first-child { border-radius: 11px 11px 0 0; }
+    .tax-row:last-child  { border-radius: 0 0 11px 11px; }
+    .tax-row + .tax-row  { border-top: 1.5px solid #e4e8f4; }
+
+    .tax-row-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14px;
+      color: #4a5578;
+    }
+
+    .tax-row-value {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #3b5bdb;
+    }
+
+    /* ── Section title ── */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 19px;
+      font-weight: 800;
+      color: #2c3e6b;
+      margin-bottom: 14px;
+    }
+
+    /* ── Result items ── */
+    .result-item {
+      border-radius: 12px;
+      padding: 15px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-item:last-child { margin-bottom: 0; }
+
+    .result-item.light {
+      background: #eef1fb;
+      border-left: 4px solid #4a6cf7;
+    }
+
+    .result-item.highlight { background: #3b5bdb; }
+
+    .result-item.light .result-label {
+      font-size: 13.5px;
+      color: #4a5578;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .result-item.highlight .result-label {
+      font-size: 13.5px;
+      color: #adbfff;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .result-item.light .result-value {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #2c3e6b;
+      flex-shrink: 0;
+    }
+
+    .result-item.highlight .result-value {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Copy button ── */
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+
+    .result-item.light .copy-btn { color: #8a97b8; }
+    .result-item.light .copy-btn:hover { color: #e07830; }
+    .result-item.highlight .copy-btn { color: #adbfff; }
+    .result-item.highlight .copy-btn:hover { color: #ffb87a; }
+    .tax-row-value .copy-btn { color: #8a97b8; }
+    .tax-row-value .copy-btn:hover { color: #e07830; }
+
+    /* ── Note ── */
+    .note {
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 12px;
+      color: #d08030;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: #2c3e6b;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Tooltip ── */
+    [data-tip] {
+      position: relative;
+    }
+
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c3e6b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      padding: 4px 9px;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 100;
+    }
+
+    [data-tip]::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: #2c3e6b;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 100;
+    }
+
+    [data-tip]:hover::after,
+    [data-tip]:hover::before {
+      opacity: 1;
+    }
+
+    /* ── Number click ── */
+    .num { cursor: pointer; }
+    .num:hover { color: #e07830; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="logo-icon">
+      <img src="logo.avif" alt="logo">
+    </div>
+  </div>
+
+  <div class="columns">
+
+    <!-- Left: Input + Tax -->
+    <div class="card">
+      <div class="input-row">
+        <span class="input-label"><span class="yen-mark">¥</span> 本体価格：</span>
+        <input class="amount-input" id="baseInput" type="text" value="50,000">
+        <span class="unit">円</span>
+      </div>
+      <div class="tax-table">
+        <div class="tax-row">
+          <span class="tax-row-label">消費税額（10%）：</span>
+          <span class="tax-row-value">
+            <span id="taxAmount" class="num" data-tip="数字のみコピー" onclick="copyNumber('taxAmount')">5,000</span>円
+            <button class="copy-btn" data-tip="円をつけてコピー" onclick="copyWithYen('taxAmount')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </span>
+        </div>
+        <div class="tax-row">
+          <span class="tax-row-label">源泉復興税（10.21%）：</span>
+          <span class="tax-row-value">
+            <span id="withholdingAmount" class="num" data-tip="数字のみコピー" onclick="copyNumber('withholdingAmount')">5,105</span>円
+            <button class="copy-btn" data-tip="円をつけてコピー" onclick="copyWithYen('withholdingAmount')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Results + Note -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="card">
+      <div class="section-title">振込額</div>
+      <div class="result-item light">
+        <span class="result-label">本体－源泉復興税：</span>
+        <span class="result-value">
+          <span id="result1" class="num" data-tip="数字のみコピー" onclick="copyNumber('result1')">44,895</span>円
+          <button class="copy-btn" data-tip="円をつけてコピー" onclick="copyWithYen('result1')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </span>
+      </div>
+      <div class="result-item highlight">
+        <span class="result-label">本体－源泉復興税（本体に対して）+消費税：</span>
+        <span class="result-value">
+          <span id="result2" class="num" data-tip="数字のみコピー" onclick="copyNumber('result2')">49,895</span>円
+          <button class="copy-btn" data-tip="円をつけてコピー" onclick="copyWithYen('result2')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </span>
+      </div>
+      <div class="result-item light">
+        <span class="result-label">本体+消費税：</span>
+        <span class="result-value">
+          <span id="result3" class="num" data-tip="数字のみコピー" onclick="copyNumber('result3')">55,000</span>円
+          <button class="copy-btn" data-tip="円をつけてコピー" onclick="copyWithYen('result3')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </span>
+      </div>
+    </div>
+
+    <div class="note">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d08030" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="#d08030"/></svg>
+      ※源泉は本体価格に対して課税して、後から消費税分を追加する
+    </div>
+    </div><!-- /right column -->
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+  const input = document.getElementById('baseInput');
+  function fmt(n) { return Math.floor(n).toLocaleString('ja-JP'); }
+  function raw(v) { return parseFloat(v.replace(/,/g, '')) || 0; }
+  function calculate() {
+    const base = raw(input.value);
+    const tax = base * 0.10, wh = base * 0.1021;
+    document.getElementById('taxAmount').textContent         = fmt(tax);
+    document.getElementById('withholdingAmount').textContent = fmt(wh);
+    document.getElementById('result1').textContent           = fmt(base - wh);
+    document.getElementById('result2').textContent           = fmt(base - wh + tax);
+    document.getElementById('result3').textContent           = fmt(base + tax);
+  }
+  input.addEventListener('input', function () {
+    const pos = this.selectionStart;
+    const digits = this.value.replace(/,/g, '');
+    if (!/^\d*$/.test(digits)) return;
+    const formatted = digits ? parseInt(digits, 10).toLocaleString('ja-JP') : '';
+    const diff = formatted.length - this.value.length;
+    this.value = formatted;
+    this.setSelectionRange(pos + diff, pos + diff);
+    calculate();
+  });
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1500);
+  }
+
+  function copyNumber(id) {
+    const val = document.getElementById(id).textContent.replace(/,/g, '');
+    navigator.clipboard.writeText(val).then(() => showToast('数字のみコピー'));
+  }
+
+  function copyWithYen(id) {
+    const val = document.getElementById(id).textContent.replace(/,/g, '');
+    navigator.clipboard.writeText(val + '円').then(() => showToast('円をつけてコピー'));
+  }
+  calculate();
+</script>
+</body>
+</html>
