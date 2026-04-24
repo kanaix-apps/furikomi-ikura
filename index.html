@@ -390,6 +390,9 @@
 
 <script>
   const input = document.getElementById('baseInput');
+  let prevValue = '50,000';
+  const undoStack = [];
+
   function fmt(n) { return Math.floor(n).toLocaleString('ja-JP'); }
   function raw(v) { return parseFloat(v.replace(/,/g, '')) || 0; }
   function calculate() {
@@ -404,12 +407,22 @@
   input.addEventListener('input', function () {
     const pos = this.selectionStart;
     const digits = this.value.replace(/,/g, '');
-    if (!/^\d*$/.test(digits)) return;
+    if (!/^\d*$/.test(digits)) { this.value = prevValue; return; }
     const formatted = digits ? parseInt(digits, 10).toLocaleString('ja-JP') : '';
+    undoStack.push(prevValue);
     const diff = formatted.length - this.value.length;
     this.value = formatted;
+    prevValue = formatted;
     this.setSelectionRange(pos + diff, pos + diff);
     calculate();
+  });
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && undoStack.length > 0) {
+      e.preventDefault();
+      prevValue = undoStack.pop();
+      input.value = prevValue;
+      calculate();
+    }
   });
   function showToast(msg) {
     const t = document.getElementById('toast');
